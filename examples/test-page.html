@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JS Disector Test Page</title>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 20px;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+
+      button {
+        margin-right: 8px;
+        padding: 8px 12px;
+      }
+
+      pre {
+        min-height: 120px;
+        border: 1px solid #c9c9d2;
+        padding: 12px;
+        background: #f6f6f8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JS Disector Test Page</h1>
+    <p>Open DevTools, switch to JS Disector, and use these buttons.</p>
+    <button id="rightClickButton" type="button">Call disableUserRightClick</button>
+    <button id="greetButton" type="button">Call demoApp.greet</button>
+    <pre id="log"></pre>
+
+    <script>
+      const log = document.querySelector("#log");
+
+      function write(message) {
+        log.textContent += `${new Date().toLocaleTimeString()} ${message}\n`;
+      }
+
+      function disableUserRightClick(event) {
+        if (event && typeof event.preventDefault === "function") {
+          event.preventDefault();
+        }
+
+        write("disableUserRightClick ran");
+      }
+
+      function formatName(name) {
+        return name.toUpperCase();
+      }
+
+      function prepareGreeting(name, options) {
+        return {
+          label: formatName(name),
+          options
+        };
+      }
+
+      window.demoApp = {
+        greet(name, options) {
+          const greeting = prepareGreeting(name, options);
+          write(`demoApp.greet ran for ${greeting.label} with ${JSON.stringify(greeting.options)}`);
+          return `Hello, ${greeting.label}`;
+        }
+      };
+
+      document.addEventListener("contextmenu", disableUserRightClick);
+      document.querySelector("#rightClickButton").addEventListener("click", (event) => {
+        disableUserRightClick(event);
+      });
+      document.querySelector("#greetButton").addEventListener("click", () => {
+        window.demoApp.greet("Ada", { source: "button", count: 1 });
+      });
+    </script>
+  </body>
+</html>

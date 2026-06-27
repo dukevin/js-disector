@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Frame Test</title>
+  </head>
+  <body>
+    <h1>JS Disector Frame Test</h1>
+    <button id="top-button" type="button">Top Button</button>
+    <iframe id="quiz-frame" name="quiz-frame" src="quiz.html" title="Quiz Frame"></iframe>
+    <script>
+      window.topApi = {
+        topClick(value) {
+          return `top:${value}`;
+        }
+      };
+
+      document.querySelector("#top-button").addEventListener("click", function handleTopClick() {
+        return window.topApi.topClick("clicked");
+      });
+    </script>
+  </body>
+</html>

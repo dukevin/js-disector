@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Quiz Frame</title>
+  </head>
+  <body>
+    <h1>Quiz Frame</h1>
+    <button id="submit-answer" type="button">Submit Answer</button>
+    <output id="result"></output>
+    <script>
+      window.calculateResult = function calculateResult(answer) {
+        return answer === "A" ? "correct" : "incorrect";
+      };
+
+      window.quizApi = {
+        submitAnswer(answer) {
+          const result = window.calculateResult(answer);
+          document.querySelector("#result").textContent = result;
+          return result;
+        }
+      };
+
+      document.querySelector("#submit-answer").addEventListener("click", function handleSubmitClick() {
+        return window.quizApi.submitAnswer("A");
+      });
+    </script>
+  </body>
+</html>

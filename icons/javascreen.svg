@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="JS Disector">
+  <rect width="48" height="48" rx="8" fill="#15141a"/>
+  <path fill="#0a84ff" d="M10 12h28v6H10zM10 22h16v5H10zM10 31h24v5H10z"/>
+  <circle cx="37" cy="33" r="6" fill="#ffbd4f"/>
+  <path fill="#15141a" d="M35.5 29.5h3v7h-3z"/>
+</svg>

@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "JS Disector",
+  "version": "0.1.2",
+  "description": "A Firefox DevTools panel that logs discoverable JavaScript function calls and can disable wrapped functions.",
+  "devtools_page": "devtools/devtools.html",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "<all_urls>",
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "icons": {
+    "48": "icons/javascreen.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "javascreen@example.local"
+    }
+  }
+}

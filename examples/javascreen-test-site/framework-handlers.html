@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Framework Handler Test</title>
+  </head>
+  <body>
+    <h1>Framework Handler Fixture</h1>
+    <button id="answer-a" type="button">Answer A</button>
+    <button id="closure-answer" type="button">Closure Answer</button>
+    <button id="replay-correct-answer" type="button">Replay Correct Answer</button>
+    <button id="vue-answer" type="button">Vue Answer</button>
+    <button id="react-counter" type="button">React Counter</button>
+    <button id="react-hook-counter" type="button">React Hook Counter</button>
+    <button id="angular-answer" type="button">Angular Answer</button>
+    <output id="result">waiting</output>
+    <output id="react-result">react:0</output>
+    <output id="react-hook-result">hook:0</output>
+    <output id="angular-result">angular:waiting</output>
+    <script>
+      window.frameworkQuiz = {
+        answered: 0,
+        checked: 0,
+        loaded: 0,
+        checkAnswer(value) {
+          this.checked += 1;
+          document.querySelector("#result").textContent = value === "A" ? "correct" : "wrong";
+          return value === "A";
+        },
+        loadNextQuestion() {
+          this.loaded += 1;
+          return this.loaded;
+        },
+        submitAnswer(value) {
+          this.answered += 1;
+          const correct = this.checkAnswer(value);
+          this.loadNextQuestion();
+          return correct;
+        }
+      };
+
+      const veiKey = Symbol("_vei");
+      const answer = document.querySelector("#answer-a");
+      const invoker = function frameworkInvoker(event) {
+        return invoker.value(event);
+      };
+      invoker.value = function onClick(event) {
+        event.currentTarget.dataset.clicked = "yes";
+        return window.frameworkQuiz.submitAnswer("A");
+      };
+      answer[veiKey] = {
+        onClick: invoker
+      };
+      answer.addEventListener("click", invoker);
+
+      {
+        window.frameworkClosureState = {
+          sent: 0
+        };
+        const closureAnswer = {
+          value: "B"
+        };
+        const closureComponent = {
+          sendAnswer(answer) {
+            window.frameworkClosureState.sent += 1;
+            document.querySelector("#result").textContent = `closure:${answer.value}`;
+            return answer.value;
+          },
+          answerClass(answer) {
+            return answer.value === "B" ? "correct" : "wrong";
+          },
+          next() {
+            return "next";
+          }
+        };
+        function closureRenderPreview() {
+          return [
+            closureComponent.answerClass(closureAnswer),
+            closureComponent.next()
+          ];
+        }
+        const closureButton = document.querySelector("#closure-answer");
+        const closureInvoker = function closureInvoker(event) {
+          return closureInvoker.value(event);
+        };
+        closureInvoker.value = function onClick(event) {
+          event.currentTarget.dataset.clicked = "closure";
+          return closureComponent.sendAnswer(closureAnswer);
+        };
+        closureButton[veiKey] = {
+          onClick: closureInvoker
+        };
+        closureButton.addEventListener("click", closureInvoker);
+      }
+
+      {
+        window.frameworkReplayQuizState = {
+          correct: 0,
+          domClicks: 0,
+          handlerRuns: 0,
+          question: 0,
+          wrong: 0
+        };
+        const correctAnswer = {
+          correct: true,
+          id: "first-correct"
+        };
+        const wrongAnswer = {
+          correct: false,
+          id: "second-wrong"
+        };
+        const replayComponent = {
+          sendAnswer(answer) {
+            window.frameworkReplayQuizState.question += 1;
+            if (answer.correct) {
+              window.frameworkReplayQuizState.correct += 1;
+            } else {
+              window.frameworkReplayQuizState.wrong += 1;
+            }
+            document.querySelector("#result").textContent = answer.correct
+              ? `replay-correct:${answer.id}`
+              : `replay-wrong:${answer.id}`;
+            if (window.frameworkReplayQuizState.question === 1) {
+              replayInvoker.value = function onClick(event) {
+                window.frameworkReplayQuizState.handlerRuns += 1;
+                event.currentTarget.dataset.directReplayCurrentTarget = "current";
+                return replayComponent.sendAnswer(wrongAnswer);
+              };
+            }
+            return answer.correct;
+          },
+          answerClass(answer) {
+            return answer.correct ? "correct" : "wrong";
+          },
+          next() {
+            return window.frameworkReplayQuizState.question + 1;
+          }
+        };
+        const replayButton = document.querySelector("#replay-correct-answer");
+        const replayInvoker = function replayQuizInvoker(event) {
+          window.frameworkReplayQuizState.domClicks += 1;
+          return replayInvoker.value(event);
+        };
+        replayInvoker.value = function onClick(event) {
+          window.frameworkReplayQuizState.handlerRuns += 1;
+          event.currentTarget.dataset.directReplayCurrentTarget = "captured";
+          return replayComponent.sendAnswer(correctAnswer);
+        };
+        replayButton[veiKey] = {
+          onClick: replayInvoker
+        };
+        replayButton.addEventListener("click", replayInvoker);
+      }
+
+      {
+        window.frameworkVueState = {
+          answered: 0,
+          classified: 0,
+          next: 0
+        };
+        const vueButton = document.querySelector("#vue-answer");
+        const vueQuestion = {
+          answered: null
+        };
+        const vueMethods = {
+          sendAnswer(answer) {
+            if (!this.localQuestion.answered) {
+              this.localQuestion.answered = answer.id;
+              window.frameworkVueState.answered += 1;
+              this.answerClass(answer);
+              this.next();
+            }
+            return this.localQuestion.answered;
+          },
+          answerClass(answer) {
+            window.frameworkVueState.classified += 1;
+            return answer.correct ? "correct" : "wrong";
+          },
+          next() {
+            window.frameworkVueState.next += 1;
+            return window.frameworkVueState.next;
+          }
+        };
+        const vueComponent = {
+          ctx: {
+            localQuestion: vueQuestion
+          },
+          proxy: null,
+          setupState: {},
+          type: {
+            name: "Question",
+            methods: vueMethods
+          },
+          uid: 101,
+          vnode: {}
+        };
+        for (const [name, method] of Object.entries(vueMethods)) {
+          vueComponent.ctx[name] = method.bind(vueComponent.ctx);
+        }
+        vueComponent.proxy = vueComponent.ctx;
+        vueButton.__vueParentComponent = vueComponent;
+
+        const vueInvoker = function vueInvoker(event) {
+          return vueInvoker.value(event);
+        };
+        vueInvoker.value = function onClick(event) {
+          event.currentTarget.dataset.clicked = "vue";
+          return vueComponent.proxy.sendAnswer({
+            correct: true,
+            id: "C"
+          });
+        };
+        vueButton[veiKey] = {
+          onClick: vueInvoker
+        };
+        vueButton.addEventListener("click", vueInvoker);
+      }
+
+      {
+        class ReactCounterComponent {
+          constructor() {
+            this.props = {
+              label: "React Counter"
+            };
+            this.state = {
+              count: 0,
+              status: "idle"
+            };
+          }
+
+          calculateNext(step) {
+            return this.state.count + step;
+          }
+
+          increment(step) {
+            this.state.count = this.calculateNext(step);
+            this.state.status = "clicked";
+            this.render();
+            return this.state.count;
+          }
+
+          render() {
+            document.querySelector("#react-result").textContent = `react:${this.state.count}`;
+            return this.state.count;
+          }
+        }
+
+        const reactComponent = new ReactCounterComponent();
+        const reactButton = document.querySelector("#react-counter");
+        const reactHandler = function onClick(event) {
+          event.currentTarget.dataset.reactClicked = "yes";
+          return reactComponent.increment(1);
+        };
+        const ReactCounter = function ReactCounter() {
+          return null;
+        };
+        const reactFiber = {
+          child: null,
+          elementType: ReactCounterComponent,
+          memoizedProps: {
+            label: "React Counter",
+            onClick: reactHandler
+          },
+          memoizedState: null,
+          return: null,
+          sibling: null,
+          stateNode: reactComponent,
+          tag: 1,
+          type: ReactCounterComponent
+        };
+        reactButton.__reactFiber$fixture = reactFiber;
+        reactButton.__reactProps$fixture = {
+          onClick: reactHandler
+        };
+        reactButton.addEventListener("click", reactHandler);
+        reactComponent.render();
+      }
+
+      {
+        const reactHookButton = document.querySelector("#react-hook-counter");
+        const ReactHookCounter = function ReactHookCounter() {
+          return null;
+        };
+        const hook = {
+          baseState: 0,
+          memoizedState: 0,
+          next: null,
+          queue: {
+            dispatch(action) {
+              hook.memoizedState = typeof action === "function" ? action(hook.memoizedState) : action;
+              hook.baseState = hook.memoizedState;
+              hook.queue.lastRenderedState = hook.memoizedState;
+              document.querySelector("#react-hook-result").textContent = `hook:${hook.memoizedState}`;
+              return hook.memoizedState;
+            },
+            lastRenderedReducer: function basicStateReducer(state, action) {
+              return typeof action === "function" ? action(state) : action;
+            },
+            lastRenderedState: 0
+          }
+        };
+        const reactHookHandler = function onClick() {
+          return hook.queue.dispatch((value) => value + 1);
+        };
+        const reactHookFiber = {
+          child: null,
+          elementType: ReactHookCounter,
+          memoizedProps: {
+            label: "React Hook Counter",
+            onClick: reactHookHandler
+          },
+          memoizedState: hook,
+          return: null,
+          sibling: null,
+          stateNode: null,
+          tag: 0,
+          type: ReactHookCounter
+        };
+        reactHookButton.__reactFiber$fixture = reactHookFiber;
+        reactHookButton.__reactProps$fixture = {
+          onClick: reactHookHandler
+        };
+        reactHookButton.addEventListener("click", reactHookHandler);
+      }
+
+      {
+        class AngularQuestionComponent {
+          constructor() {
+            this.localQuestion = {
+              answered: null,
+              title: "Angular fixture"
+            };
+            this.score = 0;
+            this.status = "waiting";
+          }
+
+          sendAnswer(answer) {
+            this.localQuestion.answered = answer.id;
+            this.applyScore(answer.points);
+            this.status = answer.correct ? "correct" : "wrong";
+            this.render();
+            return this.status;
+          }
+
+          applyScore(points) {
+            this.score += points;
+            return this.score;
+          }
+
+          render() {
+            document.querySelector("#angular-result").textContent = `angular:${this.status}:${this.score}`;
+            return this.status;
+          }
+        }
+
+        const angularComponent = new AngularQuestionComponent();
+        const angularButton = document.querySelector("#angular-answer");
+        const angularAnswer = {
+          correct: true,
+          id: "angular-correct",
+          points: 5
+        };
+        const angularTemplateListener = function angularTemplateListener() {
+          return angularComponent.sendAnswer(angularAnswer);
+        };
+        angularButton.__ngContext__ = [
+          angularButton,
+          null,
+          angularComponent,
+          {
+            component: angularComponent
+          }
+        ];
+        window.ng = window.ng || {};
+        window.ng.getComponent = function getComponent(element) {
+          return element === angularButton ? angularComponent : null;
+        };
+        window.ng.getOwningComponent = window.ng.getComponent;
+        window.ng.getDirectives = function getDirectives(element) {
+          return element === angularButton ? [angularComponent] : [];
+        };
+        angularButton.addEventListener("click", angularTemplateListener);
+      }
+    </script>
+  </body>
+</html>

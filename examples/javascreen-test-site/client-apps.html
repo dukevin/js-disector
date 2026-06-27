@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Client App Patterns</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+      }
+
+      section {
+        border: 1px solid #bbb;
+        margin-bottom: 16px;
+        padding: 12px;
+      }
+
+      button,
+      input {
+        font: inherit;
+        margin: 4px;
+      }
+
+      output,
+      .results {
+        display: block;
+        margin-top: 8px;
+        min-height: 1.4em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Client-side JS App Patterns</h1>
+
+    <section id="checkout-section">
+      <h2>Checkout Flow</h2>
+      <button id="add-notebook" type="button">Add notebooks</button>
+      <button id="apply-coupon" type="button">Apply coupon</button>
+      <output id="cart-count">0 items</output>
+      <output id="cart-total">0</output>
+    </section>
+
+    <section id="search-section">
+      <h2>Search Flow</h2>
+      <input id="search-box" type="search" value="pen" aria-label="Search products">
+      <button id="run-search" type="button">Search</button>
+      <output id="search-count">0 results</output>
+      <div id="search-results" class="results"></div>
+    </section>
+
+    <section id="dashboard-section">
+      <h2>Dashboard Flow</h2>
+      <button id="complete-task" type="button">Complete task</button>
+      <output id="completed-count">0 complete</output>
+      <output id="progress-percent">0%</output>
+    </section>
+
+    <script>
+      window.checkoutApp = {
+        catalog: {
+          notebook: 5,
+          pencil: 2,
+          sticker: 1
+        },
+        state: {
+          cart: [],
+          cartCount: 0,
+          coupon: "",
+          discountRate: 0,
+          subtotal: 0,
+          total: 0,
+          totalDisplay: {
+            text: "0",
+            _updateText() {
+              document.querySelector("#cart-total").textContent = this.text;
+            }
+          }
+        },
+        addItem(sku, quantity) {
+          const price = this.lookupPrice(sku);
+          const lineTotal = this.calculateLineTotal(price, quantity);
+          this.state.cart.push({ sku, quantity, lineTotal });
+          this.state.cartCount += quantity;
+          this.updateTotals();
+          this.renderCart();
+          return this.state.total;
+        },
+        applyDiscount(code) {
+          this.state.coupon = this.normalizeCoupon(code);
+          this.state.discountRate = this.state.coupon === "SAVE10" ? 0.1 : 0;
+          this.updateTotals();
+          this.renderCart();
+          return this.state.discountRate;
+        },
+        calculateLineTotal(price, quantity) {
+          return price * quantity;
+        },
+        lookupPrice(sku) {
+          return this.catalog[sku] || 0;
+        },
+        normalizeCoupon(code) {
+          return String(code || "").trim().toUpperCase();
+        },
+        renderCart() {
+          document.querySelector("#cart-count").textContent = `${this.state.cartCount} items`;
+          this.state.totalDisplay.text = String(this.state.total);
+          this.state.totalDisplay._updateText();
+          return this.state.totalDisplay.text;
+        },
+        updateTotals() {
+          this.state.subtotal = this.state.cart.reduce((sum, item) => sum + item.lineTotal, 0);
+          this.state.total = Number((this.state.subtotal * (1 - this.state.discountRate)).toFixed(2));
+          return this.state.total;
+        }
+      };
+
+      window.searchApp = {
+        products: ["notebook", "pencil", "gel pen", "planner", "sticker", "paper clips"],
+        state: {
+          lastQuery: "",
+          resultCount: 0,
+          resultCountDisplay: {
+            text: "0 results",
+            _updateText() {
+              document.querySelector("#search-count").textContent = this.text;
+            }
+          },
+          results: []
+        },
+        filterProducts(query) {
+          return this.products.filter((item) => item.includes(query));
+        },
+        normalizeQuery(query) {
+          return String(query || "").trim().toLowerCase();
+        },
+        renderResults() {
+          document.querySelector("#search-results").textContent = this.state.results.join(", ");
+          this.state.resultCountDisplay.text = `${this.state.resultCount} results`;
+          this.state.resultCountDisplay._updateText();
+          return this.state.resultCountDisplay.text;
+        },
+        runSearch(query) {
+          this.state.lastQuery = this.normalizeQuery(query);
+          this.state.results = this.filterProducts(this.state.lastQuery);
+          this.state.resultCount = this.state.results.length;
+          this.renderResults();
+          return this.state.resultCount;
+        }
+      };
+
+      window.dashboardApp = {
+        state: {
+          completedCount: 0,
+          completedCountDisplay: {
+            text: "0 complete",
+            _updateText() {
+              document.querySelector("#completed-count").textContent = this.text;
+            }
+          },
+          progressPercent: 0,
+          progressPercentDisplay: {
+            text: "0%",
+            _updateText() {
+              document.querySelector("#progress-percent").textContent = this.text;
+            }
+          },
+          tasks: {
+            "write-tests": false,
+            "review-output": false,
+            "ship-build": false
+          }
+        },
+        completeTask(taskId) {
+          this.setTaskComplete(taskId, true);
+          this.recalculateProgress();
+          this.renderStats();
+          return this.state.completedCount;
+        },
+        recalculateProgress() {
+          const values = Object.values(this.state.tasks);
+          this.state.completedCount = values.filter(Boolean).length;
+          this.state.progressPercent = Math.round((this.state.completedCount / values.length) * 100);
+          return this.state.progressPercent;
+        },
+        renderStats() {
+          this.state.completedCountDisplay.text = `${this.state.completedCount} complete`;
+          this.state.completedCountDisplay._updateText();
+          this.state.progressPercentDisplay.text = `${this.state.progressPercent}%`;
+          this.state.progressPercentDisplay._updateText();
+          return this.state.progressPercent;
+        },
+        setTaskComplete(taskId, complete) {
+          this.state.tasks[taskId] = Boolean(complete);
+          return this.state.tasks[taskId];
+        }
+      };
+
+      document.querySelector("#add-notebook").addEventListener("click", function handleAddNotebookClick() {
+        return window.checkoutApp.addItem("notebook", 2);
+      });
+
+      document.querySelector("#apply-coupon").addEventListener("click", function handleCouponClick() {
+        return window.checkoutApp.applyDiscount("save10");
+      });
+
+      document.querySelector("#run-search").addEventListener("click", function handleSearchClick() {
+        return window.searchApp.runSearch(document.querySelector("#search-box").value);
+      });
+
+      document.querySelector("#complete-task").addEventListener("click", function handleCompleteTaskClick() {
+        return window.dashboardApp.completeTask("write-tests");
+      });
+    </script>
+  </body>
+</html>

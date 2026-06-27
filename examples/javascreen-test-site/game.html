@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Fragile Game Test</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+      }
+
+      .btn-play {
+        display: inline-block;
+        border: 1px solid #555;
+        margin: 8px 0;
+        padding: 8px 14px;
+        user-select: none;
+      }
+
+      canvas {
+        display: block;
+        border: 1px solid #999;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fragile Game</h1>
+    <div id="play-button" class="btn-play" role="button" tabindex="0">Play</div>
+    <progress id="loading" max="100" value="0"></progress>
+    <output id="scene">menu</output>
+    <canvas id="game-canvas" width="320" height="180"></canvas>
+    <script>
+      class ScoreBoard {
+        constructor() {
+          this.score = 0;
+        }
+
+        addScore(amount) {
+          this.score += amount;
+          return this.score;
+        }
+      }
+
+      window.fragileGame = {
+        cardClicks: 0,
+        progress: 0,
+        scoreBoard: new ScoreBoard(),
+        scene: "menu",
+        trace: [],
+        beginLoading() {
+          this.trace.push("beginLoading");
+          this.setScene("loading");
+          this.progress = 0;
+          this.loadingTick();
+          return this.scene;
+        },
+        cardDown(event) {
+          this.cardClicks += 1;
+          this.scoreBoard.addScore(1);
+          this.trace.push(`card:${event.type}`);
+          return this.cardClicks;
+        },
+        finishLoading() {
+          this.trace.push("finishLoading");
+          this.progress = 100;
+          document.querySelector("#loading").value = this.progress;
+          this.setScene("game");
+          return this.scene;
+        },
+        loadingTick() {
+          this.progress += 25;
+          document.querySelector("#loading").value = this.progress;
+          if (this.progress >= 100) {
+            return this.finishLoading();
+          }
+
+          window.setTimeout(() => this.loadingTick(), 5);
+          return this.progress;
+        },
+        setScene(scene) {
+          this.scene = scene;
+          document.querySelector("#scene").textContent = scene;
+          return scene;
+        }
+      };
+
+      const playButton = document.querySelector("#play-button");
+      playButton.addEventListener("pointerdown", function startGamePointerDown(event) {
+        window.fragileGame.trace.push(`play:${event.type}`);
+      });
+      playButton.addEventListener("pointerup", function eventHandler(event) {
+        window.fragileGame.trace.push(`play:${event.type}`);
+        return false;
+      });
+      playButton.addEventListener("click", function startGameClick(event) {
+        window.fragileGame.trace.push(`play:${event.type}`);
+        return window.fragileGame.beginLoading();
+      });
+
+      const canvas = document.querySelector("#game-canvas");
+      canvas.addEventListener("mousedown", function canvasCardMouseDown(event) {
+        return window.fragileGame.cardDown(event);
+      });
+      canvas.addEventListener("mouseup", function canvasCardMouseUp(event) {
+        window.fragileGame.trace.push(`canvas:${event.type}`);
+      });
+      canvas.addEventListener("click", function canvasCardClick(event) {
+        window.fragileGame.trace.push(`canvas:${event.type}`);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Network Fixture</title>
+  </head>
+  <body>
+    <h1>Network Fixture</h1>
+    <button id="check-answer" type="button">Check Answer</button>
+    <output id="network-result">waiting</output>
+    <script>
+      window.networkFixture = {
+        async submitAnswer(value) {
+          const response = await fetch("/api/answer", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json"
+            },
+            body: JSON.stringify({ answer: value })
+          });
+          const data = await response.json();
+          window.networkFixture.lastResult = data;
+          document.querySelector("#network-result").textContent = data.answer ? "correct" : "wrong";
+          return data;
+        }
+      };
+
+      document.querySelector("#check-answer").addEventListener("click", function handleNetworkAnswerClick() {
+        window.networkFixture.submitAnswer("A");
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JS Disector</title>
+    <link rel="stylesheet" href="panel.css">
+    <script src="panel.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <strong>JS Disector</strong>
+        <span id="status" class="status status-idle">Idle</span>
+      </div>
+      <div class="actions">
+        <button id="startButton" type="button">Start</button>
+        <button id="reloadButton" type="button">Reload + Capture</button>
+        <button id="stopButton" type="button">Stop</button>
+        <button id="rescanButton" type="button">Rescan</button>
+        <button id="downloadButton" type="button">Download</button>
+        <button id="clearButton" type="button">Clear</button>
+      </div>
+    </header>
+
+    <nav class="tabbar" aria-label="JS Disector views">
+      <button id="eventsTab" class="tab-button active" type="button" aria-selected="true">Events</button>
+      <button id="functionsTab" class="tab-button" type="button" aria-selected="false">Functions</button>
+      <button id="variablesTab" class="tab-button" type="button" aria-selected="false">Variables</button>
+      <button id="favoritesTab" class="tab-button" type="button" aria-selected="false">Favorites</button>
+    </nav>
+
+    <section class="filters" aria-label="Filters">
+      <input id="filterInput" type="search" placeholder="Filter functions">
+      <input id="variableSearchInput" type="search" placeholder="Search values" hidden>
+      <button id="variableRefreshButton" class="icon-button filter-icon-button" type="button" title="Refresh variables" aria-label="Refresh variables" hidden></button>
+      <input id="blacklistInput" type="search" placeholder="Blacklist filter">
+      <label id="autoscrollControl" class="checkline">
+        <input id="autoscrollInput" type="checkbox" checked>
+        <span>Autoscroll</span>
+      </label>
+      <label id="hideNoisyControl" class="checkline">
+        <input id="hideNoisyInput" type="checkbox" checked>
+        <span>Hide noisy</span>
+      </label>
+      <label id="showMinifiedControl" class="checkline">
+        <input id="showMinifiedInput" type="checkbox" checked>
+        <span>Show minified functions</span>
+      </label>
+      <label id="traceHandlersControl" class="checkline">
+        <input id="traceHandlersInput" type="checkbox" checked>
+        <span>Trace event handlers</span>
+      </label>
+      <label id="safeModeControl" class="checkline">
+        <input id="safeModeInput" type="checkbox">
+        <span>Safe mode</span>
+      </label>
+      <label id="continueAfterLimitControl" class="checkline">
+        <input id="continueAfterLimitInput" type="checkbox">
+        <span>Continue after 99+</span>
+      </label>
+      <label id="pauseRequestsControl" class="checkline">
+        <input id="pauseRequestsInput" type="checkbox">
+        <span>Pause requests</span>
+      </label>
+      <label id="pauseResponsesControl" class="checkline">
+        <input id="pauseResponsesInput" type="checkbox">
+        <span>Pause responses</span>
+      </label>
+      <label id="liveVariablesControl" class="checkline" hidden>
+        <input id="liveVariablesInput" type="checkbox">
+        <span>Live variables</span>
+      </label>
+      <div class="metrics" aria-live="polite">
+        <span><b id="callCount">0</b> calls</span>
+        <span><b id="functionCount">0</b> functions</span>
+        <span><b id="variableCount">0</b> variables</span>
+        <span><b id="disabledCount">0</b> disabled</span>
+      </div>
+      <p id="hint" class="hint" hidden></p>
+    </section>
+
+    <main id="eventsPanel" class="panel-view log-shell">
+      <div class="tree-heading" aria-hidden="true">
+        <span>Time</span>
+        <span>Function</span>
+        <span>Parameters</span>
+        <span>Return</span>
+        <span>Source</span>
+        <span>Action</span>
+      </div>
+      <div id="callTree" class="call-tree" role="tree"></div>
+      <div id="emptyState" class="empty-state">No calls captured.</div>
+    </main>
+
+    <main id="functionsPanel" class="panel-view function-shell" hidden>
+      <div class="function-heading" aria-hidden="true">
+        <span>Last Call</span>
+        <span>Function</span>
+        <span>Parameters</span>
+        <span>Return</span>
+        <span>Source</span>
+        <span>Action</span>
+      </div>
+      <div id="functionTable" class="function-table"></div>
+      <div id="functionsEmptyState" class="empty-state">No functions called.</div>
+    </main>
+
+    <main id="variablesPanel" class="panel-view variable-shell" hidden>
+      <div class="variable-heading" aria-hidden="true">
+        <span>Changed</span>
+        <span>Variable</span>
+        <span>Value</span>
+        <span>Type</span>
+        <span>Frame</span>
+        <span>Action</span>
+      </div>
+      <div id="variableTable" class="variable-table"></div>
+      <div id="variablesEmptyState" class="empty-state">No variables found.</div>
+    </main>
+
+    <main id="favoritesPanel" class="panel-view favorite-shell" hidden>
+      <div class="favorite-heading" aria-hidden="true">
+        <span>Type</span>
+        <span>Name</span>
+        <span>Details</span>
+        <span>Value</span>
+        <span>Frame</span>
+        <span>Action</span>
+      </div>
+      <div id="favoriteTable" class="favorite-table"></div>
+      <div id="favoritesEmptyState" class="empty-state">No favorites starred.</div>
+    </main>
+  </body>
+</html>

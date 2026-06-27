@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>JS Disector Async Update Fixture</title>
+  </head>
+  <body>
+    <h1>Async Update Fixture</h1>
+    <button id="load-status" type="button">Load Status</button>
+    <output id="async-status">idle</output>
+    <script>
+      window.asyncUpdateFixture = {
+        lastResult: null,
+        seq: 0,
+        renderStatus(data) {
+          window.asyncUpdateFixture.lastResult = data;
+          document.querySelector("#async-status").dataset.source = data.source || "";
+          document.querySelector("#async-status").textContent = `${data.message}:${data.count}`;
+        },
+        async loadStatus() {
+          const nextSeq = window.asyncUpdateFixture.seq + 1;
+          window.asyncUpdateFixture.seq = nextSeq;
+          const response = await fetch(`/api/status?seq=${nextSeq}`);
+          const data = await response.json();
+          window.asyncUpdateFixture.renderStatus(data);
+          return data;
+        }
+      };
+
+      document.querySelector("#load-status").addEventListener("click", function handleAsyncStatusClick() {
+        window.asyncUpdateFixture.loadStatus();
+      });
+    </script>
+  </body>
+</html>

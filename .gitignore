@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules/
+web-ext-artifacts/
+dist/
+build/
+
+# Local captures, exports, and private downloaded pages
+examples/training-example/
+har-reports/
+*.har
+!tests/fixtures/har-structure-sample.har
+js-disector-*.json
+javascreen-*.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
